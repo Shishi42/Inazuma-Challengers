@@ -1,0 +1,24 @@
+{
+  "name": "osiris",
+  "version": "1.0.0",
+  "description": "Inazuma Eleven Competitive Discord BOT",
+  "main": "osiris.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "bot",
+    "discord",
+    "Inazuma",
+    "Eleven"
+  ],
+  "author": "Shishi",
+  "license": "ISC",
+  "dependencies": {
+    "cron": "^2.2.0",
+    "discord.js": "^14.7.1",
+    "dotenv": "^16.0.3",
+    "fs": "^0.0.1-security",
+    "jsonfile": "^6.1.0"
+  }
+}
