@@ -6,6 +6,7 @@ module.exports = {
   description: "Affiche les informations d'un clan",
   permission: null,
   dm: true,
+  category: "Clans",
   options: [
     {
       type: "role",
@@ -31,13 +32,13 @@ module.exports = {
       .setDescription(`Clan ${clan.nationality} | fondé le ${clan.foundation_date}`)
       .setTimestamp()
 
-      bot.db.all(`SELECT * FROM membres WHERE clan = "${clan.clan_id}";`, (_, mem) => {
-        mem.forEach(m => {
-          membres.push(m.membre_id)
-        })
-        embed.addFields({name: "Membres", value: membres.join("\n")})
+      // bot.db.all(`SELECT * FROM membres WHERE clan = "${clan.clan_id}";`, (_, mem) => {
+      //   mem.forEach(m => {
+      //     membres.push(m.membre_id)
+      //   })
+      //   embed.addFields({name: "Membres", value: membres.join("\n")})
         message.reply({embeds: [embed]})
-      })
+      // })
     })
   }
 }
