@@ -19,6 +19,7 @@
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
     "fs": "^0.0.1-security",
-    "jsonfile": "^6.1.0"
+    "jsonfile": "^6.1.0",
+    "sqlite3": "^5.1.4"
   }
 }

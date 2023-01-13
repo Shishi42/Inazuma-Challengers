@@ -1,9 +1,12 @@
 const Discord = require('discord.js')
+const sqlite3 = require("sqlite3")
 const slashcommands_loader = require("../loaders/slashcommands_loader")
 
 module.exports = async bot => {
 
   await slashcommands_loader(bot)
+
+  bot.db = new sqlite3.Database("challengers.db")
 
   console.log(`Connecté en tant que ${bot.user.tag}!`)
 
@@ -46,5 +49,5 @@ module.exports = async bot => {
     if(status.includes("Soundtrack")) type = 2 // listening
     bot.user.setPresence({activities: [{ name: status, type: type }], status: 'online'})
 
-  }, Math.floor(Math.random() * 60000))
+  }, Math.floor(Math.random() * 600000))
 }

@@ -3,7 +3,7 @@ const Discord = require("discord.js")
 module.exports = {
 
   name: "uptime",
-  description: "Donne l'uptime du BOT'",
+  description: "Donne l'uptime du BOT",
   permission: null,
   dm: true,
   category: "Utilitaire",

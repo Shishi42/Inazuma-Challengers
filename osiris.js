@@ -10,4 +10,5 @@ bot.color = config.bot_color
 
 commands_loader(bot)
 events_loader(bot)
+
 bot.login(config.token)
