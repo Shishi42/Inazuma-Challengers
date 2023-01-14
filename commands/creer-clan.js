@@ -55,19 +55,12 @@ module.exports = {
       description: "Nationalité principale du clan (un émoji de drapeau, par défaut international)",
       required: false,
       autocomplete: false,
-    },
-    // {
-    //   type: "string",
-    //   name: "membres",
-    //   description: "Liste d'id Discord de membres du clan (exemple: 1 2 3 4)",
-    //   required: false,
-    //   autocomplete: false,
-    // }
+    }
   ],
 
   async run(bot, message, args) {
 
-    await message.deferReply()
+    await message.deferReply({ephemeral: true})
 
     function isURL(str) {
       var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
@@ -109,8 +102,6 @@ module.exports = {
 
       embed.addFields({name: "Capitaine", value: '<@'+args.get("capitaine").value+'>'})
 
-      if(args.get("membres")) embed.addFields({name: "Membres", value: args.get("membres").value.split(" ").join("\n")})
-
       const row = new Discord.ActionRowBuilder()
 			.addComponents(
 				new Discord.ButtonBuilder()
@@ -128,9 +119,9 @@ module.exports = {
       message.editReply({embeds: [embed], components: [row]})
 
       collector.on('collect', async i => {
-
+        await i.deferReply()
         if (i.customId === 'confirm_create') {
-          await i.deferReply()
+
           const new_role = await message.guild.roles.create({
             name: args.get("nom").value+" ("+args.get("alias").value+")",
             color: args.get("couleur").value,
@@ -145,8 +136,12 @@ module.exports = {
           let date = args.get("date")? args.get("date").value : null
           let nat = args.get("nationalité")? args.get("nationalité").value : "🇺🇳"
 
-          bot.db.run(`INSERT INTO clans (name, alias, role_id, captain_id, color, logo_url, foundation_date, nationality)
+          await bot.db.run(`INSERT INTO clans (name, alias, role_id, captain_id, color, logo_url, foundation_date, nationality)
             VALUES ('${args.get("nom").value}', '${args.get("alias").value}', '${new_role.id}', '${args.get("capitaine").value}', '${args.get("couleur").value}', '${logo}', '${date}', '${nat}')`)
+
+          bot.db.get(`SELECT * FROM clans WHERE alias = "${args.get("alias").value}";`, (_, clan) => {
+            bot.db.run(`INSERT INTO membres (membre_id, clan_id, is_captain) VALUES ('${args.get("capitaine").value}', ${clan.clan_id}, 1)`)
+          })
 
           return await i.editReply(`Le clan ${args.get("nom").value} a été ajouté.`)
 
