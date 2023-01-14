@@ -52,7 +52,7 @@ module.exports = {
       .setColor(bot.color)
       .setTitle(`Commande **${command.name}**`)
       .setThumbnail(bot.user.displayAvatarURL({dynamic: true}))
-      .setDescription(`Nom : \`${command.name}\` \nDescription : \`${command.description}\` \nPermission requise : \`${typeof command.permission !== "bigint" ? command.permission !== null ? command.permission : "Aucune" : new Discord.PermissionBitField(command.permission).toArray(false)}\` \nCommande en DM : \`${command.dm ? "Oui" : "Non"}\` \nCatégorie : \`${command.category}\``)
+      .setDescription(`Nom : \`${command.name}\` \nDescription : \`${command.description}\` \nPermission requise : \`${typeof command.permission !== "bigint" ? command.permission !== null ? command.permission : "Aucune" : new Discord.PermissionsBitField(command.permission).toArray(false)}\` \nCommande en DM : \`${command.dm ? "Oui" : "Non"}\` \nCatégorie : \`${command.category}\``)
       .setTimestamp()
 
       await message.reply({embeds: [embed]})

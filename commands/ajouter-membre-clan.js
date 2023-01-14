@@ -3,7 +3,7 @@ const Discord = require("discord.js")
 module.exports = {
 
   name: "ajouter-membre-clan",
-  description: "Ajoute des membres à un clan",
+  description: "Ajoute un membre à un clan",
   permission: null,
   dm: false,
   category: "Clans",
@@ -15,9 +15,9 @@ module.exports = {
       required: true
     },
     {
-      type: "string",
-      name: "membres",
-      description: "Liste des membres à ajouter au clan",
+      type: "user",
+      name: "membre",
+      description: "Membre à ajouter au clan",
       required: true,
       autocomplete: false
     }
@@ -31,44 +31,23 @@ module.exports = {
 
     bot.db.get(`SELECT * FROM clans WHERE role_id = "${args.get("clan").value}";`, (_, clan) => {
 
-      bot.db.get(`SELECT * FROM membres WHERE membre_id = "${message.user.id}" AND clan_id = "${clan.clan_id}";`, (_, mem) => {
-        if(message.member.permissions.has(Discord.PermissionsBitField.Flags.Administrator) || (mem && mem.is_captain)) go = 1
+      bot.db.get(`SELECT * FROM membres WHERE membre_id = "${message.user.id}" AND clan_id = "${clan.clan_id}";`, (_, auteur) => {
+        if(message.member.permissions.has(Discord.PermissionsBitField.Flags.Administrator) || (auteur && auteur.is_captain)) go = 1
         else return message.editReply("Tu n'es pas le capitaine de ce clan ni administrateur.")
       })
 
-      if(!args.get("membres").value) return message.editReply("La liste de membres fournit est vide.")
-      else {
+      bot.db.get(`SELECT * FROM membres WHERE membre_id = "${args.get("membre").value}";`, (_, membre) => {
 
-        bot.db.all(`SELECT * FROM membres;`, (_, membres) => {
-          let found = args.get("membres").value.split(" ").filter(member => message.guild.members.cache.get(member) != undefined)
-          let found_but_taken = []
-          for(membre of membres){
-            if(found.includes(membre.membre_id)) found_but_taken.push(membre.membre_id)
-          }
-
-          let not_found = args.get("membres").value.split(" ").filter(x => !found.includes(x))
-          found = found.filter(x => !found_but_taken.includes(x))
+        if((membre && membre.clan_id != "null") || (message.guild.members.cache.get(args.get("membre").value) == undefined)) return message.editReply("Ce membre n'est pas disponible.")
+        else{
 
           let embed = new Discord.EmbedBuilder()
           .setColor(clan.color)
           .setTitle(`${clan.name} (${clan.alias})`)
           .setTimestamp()
+          .addFields({name: "Membre trouvé", value: "<@"+args.get("membre").value+">"})
 
           if(clan.logo_url != "null") embed.setThumbnail(clan.logo_url)
-
-          // console.log(found)
-          // console.log(found_but_taken)
-          // console.log(not_found)
-
-          if(found != []){
-            arr = found.map(i => '<@' + i + '>');
-            embed.addFields({name: "Membres trouvés", value: arr.join("\n")})
-          }
-          if(found_but_taken != []){
-            arr = found_but_taken.map(i => '<@' + i + '>');
-            embed.addFields({name: "Membres trouvés mais non-disponibles", value: arr.join("\n")})
-          }
-          if(not_found != []) embed.addFields({name: "Membres non-trouvés", value: not_found.join("\n")})
 
           const row = new Discord.ActionRowBuilder()
     			.addComponents(
@@ -89,17 +68,15 @@ module.exports = {
           collector.on('collect', async i => {
             await i.deferReply()
             if (i.customId === 'confirm_add') {
-              found.forEach(f => {
-                bot.db.run(`INSERT INTO membres (membre_id, clan_id, is_captain) VALUES ('${f}', ${clan.clan_id}, 0)`)
-                message.guild.members.cache.get(f).roles.add(message.guild.roles.cache.get(clan.role_id))
-              })
-              return await i.editReply("Les membres ont été ajouté.")
+              bot.db.run(`INSERT INTO membres (membre_id, clan_id, is_captain) VALUES ('${args.get("membre").value}', ${clan.clan_id}, 0)`)
+              message.guild.members.cache.get(args.get("membre").value).roles.add(message.guild.roles.cache.get(clan.role_id))
+              return await i.editReply("Le membre a été ajouté.")
             } else if (i.customId === 'cancel_add') {
               return await i.editReply("Ajout annulée.")
             }
           })
-        })
-      }
+        }
+      })
     })
   }
 }
