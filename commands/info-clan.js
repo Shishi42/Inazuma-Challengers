@@ -18,36 +18,42 @@ module.exports = {
 
   async run(bot, message, args) {
 
-    let membres = []
+    let clan_members = []
     let cap
 
-    bot.db.get(`SELECT * FROM clans WHERE role_id = "${args.get("clan").value}";`, (_, clan) => {
+    let clan = await bot.Clans.findOne({where: {role_id: args.get("clan").value}})
+    if (clan === undefined) return message.reply("Pas de clan lié à ce rôle.")
 
-      if (clan === undefined) return message.reply("Pas de clan lié à ce rôle.")
+    let embed = new Discord.EmbedBuilder()
+    .setColor(clan.dataValues.color)
+    .setTitle(`${clan.dataValues.name} (${clan.dataValues.alias})`)
+    .setTimestamp()
+    .setFooter({text: 'a BOT by @shishi4272', iconURL: 'https://www.iconpacks.net/icons/2/free-twitter-logo-icon-2429-thumb.png'})
+    if(clan.dataValues.logo_url) embed.setThumbnail(clan.logo_url)
 
-      let embed = new Discord.EmbedBuilder()
-      .setColor(clan.color)
-      .setTitle(`${clan.name} (${clan.alias})`)
-      .setDescription(`Clan ${clan.nationality} | fondé le ${clan.foundation_date}`)
-      .setTimestamp()
-      if(clan.logo_url != "null") embed.setThumbnail(clan.logo_url)
+    if(clan.dataValues.found_date) embed.setDescription(`Clan ${clan.dataValues.nationality}  | fondé le ${clan.dataValues.found_date}`)
+    else embed.setDescription(`Clan ${clan.dataValues.nationality}`)
 
-      if(clan.foundation_date != "null") embed.setDescription(`Clan ${clan.nationality}  | fondé le ${clan.date}`)
-      else embed.setDescription(`Clan ${clan.nationality}`)
 
-      bot.db.all(`SELECT * FROM membres WHERE clan_id = "${clan.clan_id}";`, (_, mem) => {
-        mem.forEach(m => {
-          if(m.is_captain) cap = m
-          else membres.push(m.membre_id)
-        })
 
-        embed.addFields({name: "Capitaine", value: "<@"+cap.membre_id+">"})
-        if(membres != []){
-          arr = membres.map(i => '<@' + i + '>');
-          embed.addFields({name: "Membres", value: arr.join("\n")})
-        }
-        message.reply({embeds: [embed]})
-      })
-    })
+
+    let members = await bot.Members.findAll({where: {clan_id: clan.dataValues.clan_id}})
+
+    for(member of members){
+      if(member.dataValues.is_captain) cap = member
+      else{
+        clan_members.push(member)
+      }
+    }
+    embed.addFields({name: "Capitaine", value: "<@"+cap.dataValues.member_id+">"})
+
+    if(clan_members.length >= 1){
+      res = ""
+      for(member of clan_members){
+        res += '<@' + member.dataValues.member_id + '>\n'
+      }
+      embed.addFields({name: "Membres", value: res})
+    }
+    message.reply({embeds: [embed]})
   }
 }

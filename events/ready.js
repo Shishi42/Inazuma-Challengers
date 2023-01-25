@@ -1,12 +1,78 @@
-const Discord = require('discord.js')
-const sqlite3 = require("sqlite3")
 const slashcommands_loader = require("../loaders/slashcommands_loader")
+const Sequelize = require("sequelize")
 
 module.exports = async bot => {
 
   await slashcommands_loader(bot)
 
-  bot.db = new sqlite3.Database("challengers.db")
+  bot.db = new Sequelize({
+    dialect: 'sqlite',
+    storage: './challengers.db'
+  })
+
+  bot.Clans = bot.db.define('clan', {
+    clan_id: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      primaryKey: true,
+      unique: true,
+    },
+    name: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    alias: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    role_id: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    color: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    logo_url: {
+      type: Sequelize.STRING,
+      defaultValue: null,
+    },
+    found_date: {
+      type: Sequelize.STRING,
+      defaultValue: null,
+    },
+    nationality: {
+      type: Sequelize.STRING,
+      defaultValue: "🇺🇳"
+    },
+    captain_id: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      unique: true,
+    }
+  })
+
+  bot.Members = bot.db.define('member', {
+    member_id: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      primaryKey: true,
+      unique: true,
+    },
+    clan_id: Sequelize.STRING,
+    is_captain: {
+      type: Sequelize.BOOLEAN,
+      allowNull: false,
+    }
+  })
+
+  bot.Clans.sync()
+  bot.Members.sync()
+  console.log(`Database online`)
 
   console.log(`Connecté en tant que ${bot.user.tag}!`)
 

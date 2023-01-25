@@ -25,58 +25,58 @@ module.exports = {
 
   async run(bot, message, args) {
 
-    let go = 0 //absurdité mais ça bypass un putain de return sinon
-
     await message.deferReply({ephemeral: true})
 
-    bot.db.get(`SELECT * FROM clans WHERE role_id = "${args.get("clan").value}";`, (_, clan) => {
+    let clan = await bot.Clans.findOne({where: {role_id: args.get("clan").value}})
+    let auteur = await bot.Members.findOne({where: {member_id: message.user.id, clan_id: clan.dataValues.clan_id}})
+    if(!message.member.permissions.has(Discord.PermissionsBitField.Flags.Administrator) && !(auteur && auteur.is_captain === 1)) return message.editReply("Tu n'es pas le capitaine de ce clan ni administrateur.")
 
-      bot.db.get(`SELECT * FROM membres WHERE membre_id = "${message.user.id}" AND clan_id = "${clan.clan_id}";`, (_, auteur) => {
-        if(message.member.permissions.has(Discord.PermissionsBitField.Flags.Administrator) || (auteur && auteur.is_captain)) go = 1
-        else return message.editReply("Tu n'es pas le capitaine de ce clan ni administrateur.")
-      })
+    let member = await bot.Members.findAll({where: {member_id: args.get("membre").value}})
+    if(member.length) return message.editReply("Ce membre n'est pas disponible.")
+    else{
 
-      bot.db.get(`SELECT * FROM membres WHERE membre_id = "${args.get("membre").value}";`, (_, membre) => {
+      let embed = new Discord.EmbedBuilder()
+      .setColor(clan.color)
+      .setTitle(`${clan.name} (${clan.alias})`)
+      .setTimestamp()
+      .addFields({name: "Membre trouvé", value: "<@"+args.get("membre").value+">"})
+      .setFooter({text: 'a BOT by @shishi4272', iconURL: 'https://www.iconpacks.net/icons/2/free-twitter-logo-icon-2429-thumb.png'})
 
-        if((membre && membre.clan_id != "null") || (message.guild.members.cache.get(args.get("membre").value) == undefined)) return message.editReply("Ce membre n'est pas disponible.")
-        else{
+      if(clan.logo_url != null) embed.setThumbnail(clan.logo_url)
 
-          let embed = new Discord.EmbedBuilder()
-          .setColor(clan.color)
-          .setTitle(`${clan.name} (${clan.alias})`)
-          .setTimestamp()
-          .addFields({name: "Membre trouvé", value: "<@"+args.get("membre").value+">"})
+      const row = new Discord.ActionRowBuilder()
+			.addComponents(
+				new Discord.ButtonBuilder()
+          .setCustomId("confirm_add")
+          .setLabel("Ajouter au clan")
+          .setStyle(Discord.ButtonStyle.Success),
+        new Discord.ButtonBuilder()
+          .setCustomId("cancel_add")
+          .setLabel("Annuler")
+          .setStyle(Discord.ButtonStyle.Danger)
+			)
 
-          if(clan.logo_url != "null") embed.setThumbnail(clan.logo_url)
+      const collector = message.channel.createMessageComponentCollector({ time: 15000 })
 
-          const row = new Discord.ActionRowBuilder()
-    			.addComponents(
-    				new Discord.ButtonBuilder()
-              .setCustomId("confirm_add")
-              .setLabel("Ajouter au clan")
-              .setStyle(Discord.ButtonStyle.Success),
-            new Discord.ButtonBuilder()
-              .setCustomId("cancel_add")
-              .setLabel("Annuler")
-              .setStyle(Discord.ButtonStyle.Danger)
-    			)
+      message.editReply({embeds: [embed], components: [row]})
 
-          const collector = message.channel.createMessageComponentCollector({ time: 15000 })
+      collector.on('collect', async i => {
+        await i.deferReply()
+        if(i.customId === 'confirm_add') {
 
-          if(go) message.editReply({embeds: [embed], components: [row]})
-
-          collector.on('collect', async i => {
-            await i.deferReply()
-            if (i.customId === 'confirm_add') {
-              bot.db.run(`INSERT INTO membres (membre_id, clan_id, is_captain) VALUES ('${args.get("membre").value}', ${clan.clan_id}, 0)`)
-              message.guild.members.cache.get(args.get("membre").value).roles.add(message.guild.roles.cache.get(clan.role_id))
-              return await i.editReply("Le membre a été ajouté.")
-            } else if (i.customId === 'cancel_add') {
-              return await i.editReply("Ajout annulée.")
-            }
+          await bot.Members.create({
+            member_id: args.get("membre").value,
+            clan_id: clan.dataValues.clan_id,
+            is_captain: false,
           })
+
+          message.guild.members.cache.get(args.get("membre").value).roles.add(message.guild.roles.cache.get(clan.role_id))
+          return await i.editReply("Le membre a été ajouté.")
+
+        } else if(i.customId === 'cancel_add') {
+          return await i.editReply("Ajout annulée.")
         }
       })
-    })
+    }
   }
 }
