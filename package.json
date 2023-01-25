@@ -1,8 +1,8 @@
 {
-  "name": "osiris",
-  "version": "1.0.0",
+  "name": "Challenger",
+  "version": "2.0.0",
   "description": "Inazuma Eleven Competitive Discord BOT",
-  "main": "osiris.js",
+  "main": "challenger.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,13 +13,14 @@
     "Eleven"
   ],
   "author": "Shishi",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "cron": "^2.2.0",
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
     "fs": "^0.0.1-security",
     "jsonfile": "^6.1.0",
+    "sequelize": "^6.28.0",
     "sqlite3": "^5.1.4"
   }
 }
